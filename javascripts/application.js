@@ -57,6 +57,10 @@ $(document).ready(function() {
         });
         $("#download_csv").attr("href", "export.php?data=" + encodeURIComponent(csvOut));
     }
+    
+    function formatTotalTime(checkedBoxes) {
+        return (checkedBoxes * 15) + " min";
+    }
 
     // Create some table columns
     (function createFirstRow() {
@@ -122,11 +126,11 @@ $(document).ready(function() {
             // Updates task time total
             var task_total;
             $("tbody tr").each(function() {
-                task_total = $(this).find("input:checked").length * 0.25;
+                task_total = formatTotalTime($(this).find("input:checked").length);
                 $(this).find(".task_total").text(task_total);
             });
             // Update daily time totals
-            var day_total  = $("body").find("input:checked").length * 0.25;
+            var day_total  = formatTotalTime($("body").find("input:checked").length);
             $("#day_total").text(day_total);
             // Load CSV Content
             generateCSV();
@@ -154,8 +158,8 @@ $(document).ready(function() {
             checkOrUncheck(thisLabel, thisInput);
 
             var parent     = $(this).parents("tr"),
-                task_total = parent.find("input:checked").length * 0.25,
-                day_total  = $("body").find("input:checked").length * 0.25;
+                task_total = formatTotalTime(parent.find("input:checked").length),
+                day_total  = formatTotalTime($("body").find("input:checked").length);
 
             // Updates task time total
             $(parent).find(".task_total").text(task_total);
@@ -230,7 +234,7 @@ $(document).ready(function() {
             $("tbody tr:not(#task_1)").remove();
             $(":input").val("").removeAttr("checked").removeClass(hv);
             $(".inc label").removeClass("active");
-            $(".task_total, #day_total").text("0");
+            $(".task_total, #day_total").text("0 min");
             delete localStorage.dtt;
             generateCSV();
             return false;
