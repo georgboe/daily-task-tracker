@@ -13,7 +13,7 @@ $(document).ready(function() {
     // Set some variables
     var num = 0, rowHTML = "", hv = "has_value",
     increment = $(".increment"), tt = $(".task_title"),
-    lastSelected;
+    lastSelected, checkedValue = null;
 
     // Adds Unique Ids to increments
     function addUniqueIds(el) {
@@ -60,6 +60,41 @@ $(document).ready(function() {
     
     function formatTotalTime(checkedBoxes) {
         return (checkedBoxes * 15) + " min";
+    }
+    
+    function triggerCheckbox(td) {
+        var thisLabel = $(td).find("label"),
+            thisInput = $(td).find("input");
+
+        function checkOrUncheck(l, i) {
+            if (checkedValue) {
+                l.removeClass("active");
+                i.removeAttr("checked");
+            } else {
+                l.addClass("active");
+                i.attr("checked", "checked");
+            }
+        }
+
+        // Add/removes .active class and checks/unchecks input checkbox
+        checkOrUncheck(thisLabel, thisInput);
+
+        var parent     = $(td).parents("tr"),
+            task_total = formatTotalTime(parent.find("input:checked").length),
+            day_total  = formatTotalTime($("body").find("input:checked").length);
+
+        // Updates task time total
+        $(parent).find(".task_total").text(task_total);
+
+        // Updates daily time total
+        $("#day_total").text(day_total);
+        storeData();
+
+        // Updates CSV
+        generateCSV();
+
+        // Makes this click the last field selected
+        lastSelected = thisInput.attr("id");
     }
 
     // Create some table columns
@@ -140,41 +175,26 @@ $(document).ready(function() {
     // Actions taking place when increment box is checked/unchecked
     (function incrementCheckbox() {
         $(".inc").live("click", function(e) {
-
-            var thisLabel = $(this).find("label"),
-                thisInput = $(this).find("input");
-
-            function checkOrUncheck(l, i) {
-                if (l.hasClass("active")) {
-                    l.removeClass("active");
-                    i.removeAttr("checked");
-                } else {
-                    l.addClass("active");
-                    i.attr("checked", "checked");
-                }
-            }
-
-            // Add/removes .active class and checks/unchecks input checkbox
-            checkOrUncheck(thisLabel, thisInput);
-
-            var parent     = $(this).parents("tr"),
-                task_total = formatTotalTime(parent.find("input:checked").length),
-                day_total  = formatTotalTime($("body").find("input:checked").length);
-
-            // Updates task time total
-            $(parent).find(".task_total").text(task_total);
-
-            // Updates daily time total
-            $("#day_total").text(day_total);
-            storeData();
-
-            // Updates CSV
-            generateCSV();
-
-            // Makes this click the last field selected
-            lastSelected = thisInput.attr("id");
-
             return false;
+        });
+        
+        $(".inc").live("mousedown", function(e) {
+            
+            $(document).bind("mouseup", function() {
+                $(document).unbind("mouseup");
+                checkedValue = null;
+            });
+            var thisInput = $(this).find("input");
+            checkedValue = thisInput.is(':checked');
+            triggerCheckbox(this)
+            if (e && e.preventDefault) e.preventDefault();
+            else if (window.event) window.event.returnValue = false;
+        });
+        
+        $(".inc").live("mouseover", function(e) {
+            if (checkedValue != null) {
+                triggerCheckbox(this)
+            }
         });
     }());
 
